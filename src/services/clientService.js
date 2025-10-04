@@ -24,3 +24,18 @@ export const createClient = async (clientData) => {
     throw error;
   }
 };
+
+// getClients:
+export const getClients = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "clients"));
+    const clients = [];
+    querySnapshot.forEach((docSnap) => {
+      clients.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    return clients;
+  } catch (error) {
+    console.error("Error al obtener clientes: ", error);
+    throw error;
+  }
+};
