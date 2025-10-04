@@ -1,0 +1,113 @@
+/* Dashboard.css */
+
+/* Contenedor principal del dashboard */
+.dashboard {
+  background-color: #111827;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header que contiene la navbar */
+.dashboard-header {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Contenido principal donde se renderizan las páginas hijas */
+.dashboard-content {
+  padding: 20px;
+  min-height: calc(100vh - 80px);
+  flex: 1;
+  overflow-x: auto;
+  background-color: #111827;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 15px;
+    min-height: calc(100vh - 100px);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-content {
+    padding: 10px;
+    min-height: calc(100vh - 120px);
+  }
+}
+
+/* Mejoras para scroll y layout */
+.dashboard {
+  overflow-x: hidden;
+}
+
+.dashboard-content {
+  position: relative;
+}
+
+/* Estados de carga para transiciones suaves */
+.dashboard-content > * {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Evitar problemas de scroll en dispositivos móviles */
+@media (max-width: 768px) {
+  .dashboard {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .dashboard-content {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Mejora para pantallas muy grandes */
+@media (min-width: 1200px) {
+  .dashboard-content {
+    padding: 30px;
+  }
+}
+
+/* Estados de loading para mejores transiciones entre páginas */
+.dashboard-content.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Asegurar que el dashboard siempre ocupe toda la pantalla */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Mejorar la experiencia en tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dashboard-content {
+    padding: 25px;
+    min-height: calc(100vh - 90px);
+  }
+}
