@@ -50,3 +50,14 @@ export const updateClient = async (id, updatedData) => {
     throw error;
   }
 };
+
+// deleteClient:
+export const deleteClient = async (id) => {
+  try {
+    const docRef = doc(db, "clients", id);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error("Error al eliminar cliente: ", error);
+    throw error;
+  }
+};
