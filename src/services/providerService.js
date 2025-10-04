@@ -24,3 +24,20 @@ export const createProvider = async (providerData) => {
     throw error;
   }
 };
+
+// getProviders:
+export const getProviders = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "providers"));
+    const providers = [];
+
+    querySnapshot.forEach((docSnap) => {
+      providers.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    return providers;
+  } catch (error) {
+    console.error("Error al obtener proveedores: ", error);
+    throw error;
+  }
+};
