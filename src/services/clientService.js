@@ -39,3 +39,14 @@ export const getClients = async () => {
     throw error;
   }
 };
+
+// updateClient:
+export const updateClient = async (id, updatedData) => {
+  try {
+    const docRef = doc(db, "clients", id);
+    await updateDoc(docRef, updatedData);
+  } catch (error) {
+    console.error("Error al actualizar cliente: ", error);
+    throw error;
+  }
+};
