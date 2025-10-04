@@ -1,5 +1,7 @@
 import {
   addDoc,
+  getDocs,
+  collection
 } from "firebase/firestore";
 import db from "../firebase.js";
 
@@ -20,3 +22,20 @@ export const createProduct = async (productData) => {
   }
 };
 
+//getProducts:
+export const getProducts = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "products"));
+    const products = [];
+
+    querySnapshot.forEach((doc) => {
+      products.push({ id: doc.id, ...doc.data() });
+    });
+
+    console.log(querySnapshot);
+    return products;
+  } catch (error) {
+    console.error("Error al obtener prouctos: ", error);
+    throw error;
+  }
+};
