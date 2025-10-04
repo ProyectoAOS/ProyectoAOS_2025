@@ -1,0 +1,339 @@
+/* RegisterComponent.css */
+
+/* Contenedor principal */
+.register-container {
+  min-height: 100vh;
+  background-color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Tarjeta principal */
+.register-card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: #1f2937;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 2rem;
+  border: 1px solid #374151;
+}
+
+/* Botón de retroceso */
+.register-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+  text-decoration: none;
+  margin-bottom: 1rem;
+  transition: color 0.3s ease;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.register-back-button:hover {
+  color: #93c5fd;
+}
+
+.register-back-icon {
+  margin-right: 0.5rem;
+}
+
+/* Header */
+.register-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.register-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+.register-subtitle {
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* Error general */
+.register-error {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #fca5a5;
+  padding: 12px 16px;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Formulario */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Grupos de input */
+.register-input-group {
+  position: relative;
+}
+
+.register-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.register-input {
+  width: 100%;
+  background-color: #374151;
+  color: white;
+  padding: 0.75rem 0.75rem 0.75rem 2.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #4b5563;
+  outline: none;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.register-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.register-input--error {
+  border-color: #ef4444;
+}
+
+.register-input--error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.register-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Error de campo específico */
+.register-field-error {
+  position: absolute;
+  bottom: -1.5rem;
+  left: 0;
+  color: #fca5a5;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Toggle de contraseña */
+.register-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-password-toggle:hover {
+  color: #d1d5db;
+}
+
+/* Checkbox y términos */
+.register-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.register-checkbox {
+  width: 1rem;
+  height: 1rem;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+  accent-color: #3b82f6;
+}
+
+.register-checkbox-text {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+.register-terms-link {
+  color: #60a5fa;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.register-terms-link:hover {
+  color: #93c5fd;
+}
+
+/* Botón de envío */
+.register-submit-button {
+  width: 100%;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.register-submit-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  transform: scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.register-submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Footer */
+.register-footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.register-footer-text {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.register-login-link {
+  color: #60a5fa;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.register-login-link:hover {
+  color: #93c5fd;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .register-container {
+    padding: 0.5rem;
+  }
+  
+  .register-card {
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+  
+  .register-title {
+    font-size: 1.5rem;
+  }
+  
+  .register-input-group {
+    margin-bottom: 2rem;
+  }
+  
+  .register-checkbox-label {
+    align-items: flex-start;
+  }
+  
+  .register-checkbox-text {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .register-card {
+    padding: 1rem;
+  }
+  
+  .register-input {
+    font-size: 0.875rem;
+    padding: 0.625rem 0.625rem 0.625rem 2.5rem;
+  }
+  
+  .register-input-icon {
+    left: 0.625rem;
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .register-password-toggle {
+    right: 0.625rem;
+  }
+  
+  .register-submit-button {
+    font-size: 0.875rem;
+    padding: 0.625rem;
+  }
+  
+  .register-back-button {
+    font-size: 0.8125rem;
+  }
+}
+
+/* Estados de carga */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.register-submit-button:disabled {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Mejorar accesibilidad */
+.register-input:focus,
+.register-checkbox:focus,
+.register-submit-button:focus,
+.register-back-button:focus,
+.register-terms-link:focus,
+.register-login-link:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Hover states para mejor UX */
+.register-input:hover {
+  border-color: #6b7280;
+}
+
+.register-checkbox:hover {
+  border-color: #6b7280;
+}
