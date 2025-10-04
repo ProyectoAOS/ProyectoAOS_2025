@@ -1,0 +1,294 @@
+/* LoginComponent.css */
+
+/* Contenedor principal */
+.login-container {
+  min-height: 100vh;
+  background-color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+/* Tarjeta principal */
+.login-card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: #1f2937;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 2rem;
+  border: 1px solid #374151;
+}
+
+/* Header */
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+.login-subtitle {
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* Formulario */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Grupos de input */
+.login-input-group {
+  position: relative;
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.login-input {
+  width: 100%;
+  background-color: #374151;
+  color: white;
+  padding: 0.75rem 0.75rem 0.75rem 2.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #4b5563;
+  outline: none;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.login-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Toggle de contraseña */
+.login-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-password-toggle:hover {
+  color: #d1d5db;
+}
+
+/* Fila de checkbox */
+.login-checkbox-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.login-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.login-checkbox {
+  width: 1rem;
+  height: 1rem;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  accent-color: #3b82f6;
+}
+
+.login-checkbox-text {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.login-forgot-link {
+  font-size: 0.875rem;
+  color: #60a5fa;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.login-forgot-link:hover {
+  color: #93c5fd;
+}
+
+/* Botón de envío */
+.login-submit-button {
+  width: 100%;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.login-submit-button:hover {
+  background-color: #1d4ed8;
+  transform: scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Footer */
+.login-footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.login-footer-text {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.login-register-link {
+  color: #60a5fa;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.login-register-link:hover {
+  color: #93c5fd;
+}
+
+/* Divisor */
+.login-divider {
+  margin-top: 2rem;
+}
+
+.login-divider-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-divider-border {
+  flex: 1;
+  height: 1px;
+  background-color: #4b5563;
+}
+
+.login-divider-text {
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  background-color: #1f2937;
+}
+
+/* Botones sociales */
+.login-social-buttons {
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.login-social-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #4b5563;
+  background-color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #d1d5db;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-social-button:hover {
+  background-color: #4b5563;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 0.5rem;
+  }
+  
+  .login-card {
+    padding: 1.5rem;
+  }
+  
+  .login-title {
+    font-size: 1.5rem;
+  }
+  
+  .login-checkbox-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .login-forgot-link {
+    white-space: normal;
+  }
+  
+  .login-social-buttons {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-card {
+    max-width: 100%;
+    padding: 1rem;
+  }
+  
+  .login-input {
+    font-size: 0.875rem;
+  }
+  
+  .login-submit-button {
+    font-size: 0.875rem;
+  }
+}

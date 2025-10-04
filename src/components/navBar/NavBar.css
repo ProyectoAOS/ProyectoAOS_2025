@@ -1,0 +1,282 @@
+/* NavBar.css */
+
+/* Navbar principal */
+.navbar {
+  background-color: #111827;
+  color: #ffffff;
+  padding: 10px 20px;
+  max-height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 100;
+}
+
+/* Sección izquierda */
+.navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+/* Lista de opciones */
+.navbar-options {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+/* Contenedor del servicio con dropdown */
+.navbar-service-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Botón de servicios */
+.navbar-service-button {
+  background-color: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.navbar-service-button:hover {
+  background-color: #374151;
+}
+
+/* Flecha del dropdown */
+.navbar-dropdown-arrow {
+  transform: rotate(0deg);
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.navbar-dropdown-arrow--open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu */
+.navbar-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  z-index: 1000;
+  margin-top: 5px;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+/* Animación de entrada del dropdown */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Items del dropdown */
+.navbar-dropdown-item {
+  padding: 12px 16px;
+  color: #374151;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+}
+
+.navbar-dropdown-item:hover {
+  background-color: #c6c6c6ff;
+}
+
+.navbar-dropdown-item--last {
+  border-bottom: none;
+}
+
+/* Item de contacto */
+.navbar-contact-item {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.navbar-contact-item:hover {
+  background-color: #374151;
+}
+
+/* Información del usuario */
+.navbar-user-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Imagen/Avatar del usuario */
+.navbar-user-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  transition: background-color 0.3s ease;
+}
+
+.navbar-user-image:hover {
+  background-color: #9ca3af;
+}
+
+/* Nombre del usuario */
+.navbar-user-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Estados de focus para accesibilidad */
+.navbar-service-button:focus,
+.navbar-dropdown-item:focus,
+.navbar-contact-item:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 8px 15px;
+    flex-wrap: wrap;
+    max-height: none;
+  }
+  
+  .navbar-options {
+    gap: 20px;
+  }
+  
+  .navbar-user-info {
+    gap: 8px;
+  }
+  
+  .navbar-user-image {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+  
+  .navbar-user-name {
+    font-size: 13px;
+  }
+  
+  .navbar-dropdown {
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 8px 10px;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .navbar-left {
+    justify-content: center;
+  }
+  
+  .navbar-options {
+    gap: 15px;
+    justify-content: center;
+  }
+  
+  .navbar-user-info {
+    justify-content: center;
+    padding-top: 10px;
+    border-top: 1px solid #374151;
+  }
+  
+  .navbar-dropdown {
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 160px;
+  }
+  
+  .navbar-service-button,
+  .navbar-contact-item {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+}
+
+/* Mejoras de UX */
+.navbar-service-button:active,
+.navbar-contact-item:active {
+  transform: scale(0.98);
+}
+
+.navbar-dropdown-item:active {
+  transform: scale(0.98);
+}
+
+/* Overlay para cerrar dropdown en móvil */
+@media (max-width: 768px) {
+  .navbar-dropdown::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: transparent;
+  }
+}
+
+/* Estados adicionales */
+.navbar-service-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.navbar-service-button:disabled:hover {
+  background-color: transparent;
+}
+
+/* Mejora visual para el dropdown activo */
+.navbar-service-container:focus-within .navbar-service-button {
+  background-color: #374151;
+}
+
+/* Smooth scroll para navegación */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Evitar overflow horizontal en móvil */
+@media (max-width: 480px) {
+  .navbar-dropdown {
+    max-width: calc(100vw - 20px);
+  }
+}
