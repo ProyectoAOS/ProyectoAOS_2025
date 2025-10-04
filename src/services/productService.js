@@ -1,7 +1,9 @@
 import {
   addDoc,
   getDocs,
-  collection
+  collection,
+  doc,
+  updateDoc
 } from "firebase/firestore";
 import db from "../firebase.js";
 
@@ -36,6 +38,34 @@ export const getProducts = async () => {
     return products;
   } catch (error) {
     console.error("Error al obtener prouctos: ", error);
+    throw error;
+  }
+};
+
+//getProductById:
+export const getProductById = async (id) => {
+  try {
+    const docRef = doc(db, "products", id);
+
+    const productByID = await getDocs(docRef);
+
+    return productByID;
+  } catch (error) {
+    console.error("Error al obtener producto por ID: ", error);
+    throw error;
+  }
+};
+
+//updateProduct:
+export const updateProduct = async (id, updatedData) => {
+  try {
+    const docRef = doc(db, "products", id);
+
+    await updateDoc(docRef, updatedData);
+
+    console.log("Producto actualizado con ID: ", id);
+  } catch (error) {
+    console.error("Error al actualizar producto: ", error);
     throw error;
   }
 };
