@@ -53,3 +53,13 @@ export const updateProvider = async (id, updatedData) => {
   }
 };
 
+// deleteProvider:
+export const deleteProvider = async (id) => {
+  try {
+    const docRef = doc(db, "providers", id);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error("Error al eliminar proveedor: ", error);
+    throw error;
+  }
+};

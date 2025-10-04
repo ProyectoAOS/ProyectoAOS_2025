@@ -20,6 +20,8 @@ function NavBar() {
     // Seleccion de servicio:
     if (service === 'Productos') {
       navigate('/dashboard/products'); // Ruta anidada
+    } else if (service === 'Proveedores') {
+      navigate('/dashboard/providers');
     }
   };
 
