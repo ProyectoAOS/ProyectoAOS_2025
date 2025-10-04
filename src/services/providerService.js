@@ -41,3 +41,15 @@ export const getProviders = async () => {
     throw error;
   }
 };
+
+// updateProvider:
+export const updateProvider = async (id, updatedData) => {
+  try {
+    const docRef = doc(db, "providers", id);
+    await updateDoc(docRef, updatedData);
+  } catch (error) {
+    console.error("Error al actualizar proveedor: ", error);
+    throw error;
+  }
+};
+
