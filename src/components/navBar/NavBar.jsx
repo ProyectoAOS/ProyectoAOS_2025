@@ -8,6 +8,7 @@ function NavBar() {
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [selectedService, setSelectedService] = useState('');
   const [userName, setUserName] = useState('Usuario');
+  const [userPhoto, setUserPhoto] = useState('');
 
   useEffect(() => {
     // Obtener el usuario del localStorage o sessionStorage
@@ -16,6 +17,7 @@ function NavBar() {
       try {
         const user = JSON.parse(userStr);
         setUserName(user.name || 'Usuario');
+        setUserPhoto(user.photoURL || '');
       } catch (error) {
         console.error('Error al parsear usuario:', error);
       }
@@ -104,7 +106,15 @@ function NavBar() {
       
       <div className="navbar-user-info">
         <div className="navbar-user-image">
-          {getInitials(userName)}
+          {userPhoto ? (
+            <img 
+              src={userPhoto} 
+              alt={userName}
+              className="navbar-user-photo"
+            />
+          ) : (
+            getInitials(userName)
+          )}
         </div>
         <div>
           <p className="navbar-user-name">{userName}</p>

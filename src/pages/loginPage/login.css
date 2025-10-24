@@ -255,6 +255,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 0.5rem;
   padding: 0.625rem 1rem;
   border-radius: 0.5rem;
   border: 1px solid #4b5563;
@@ -263,11 +264,21 @@
   font-weight: 500;
   color: #d1d5db;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.login-social-button:hover {
+.login-social-button:hover:not(:disabled) {
   background-color: #4b5563;
+  transform: translateY(-2px);
+}
+
+.login-social-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-social-icon {
+  flex-shrink: 0;
 }
 
 /* Responsive design */
