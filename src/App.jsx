@@ -10,6 +10,7 @@ import Dashboard from "./components/dashboard/Dashboard.jsx";
 import ProductsComponent from "./pages/ProductsPage/products.jsx";
 import ProviderPage from "./pages/ProviderPage/Provider.jsx";
 import ClientPage from "./pages/ClientPage/Client.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 function App() {
   return (
@@ -28,7 +29,14 @@ function App() {
           path="/resetPassword"
           element={<ResetPasswordComponent></ResetPasswordComponent>}
         ></Route>
-        <Route path="/dashboard" element={<Dashboard></Dashboard>}>
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        >
         {/* Rutas hijas del dashboard */}
           <Route
             path="products"
