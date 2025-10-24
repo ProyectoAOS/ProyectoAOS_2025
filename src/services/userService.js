@@ -1,4 +1,4 @@
-import { addDoc, getDocs, query, where, setDoc, doc } from "firebase/firestore";
+import { addDoc, getDocs, query, where } from "firebase/firestore";
 import { signInWithPopup } from "firebase/auth";
 import { userModel, userCollection } from "../models/users";
 import { auth, googleProvider } from "../firebase";
@@ -15,7 +15,6 @@ export const createUser = async (userData) => {
   }
 };
 
-// Login de usuario con email y password
 export const loginUser = async (email, password) => {
   try {
     // Crear una consulta para buscar el usuario por correo
@@ -47,6 +46,7 @@ export const loginUser = async (email, password) => {
     throw error;
   }
 };
+
 
 // Login con Google
 export const loginWithGoogle = async () => {
