@@ -1,7 +1,7 @@
 import { addDoc, getDocs, query, where } from "firebase/firestore";
 import { signInWithPopup } from "firebase/auth";
 import { userModel, userCollection } from "../models/users";
-import { auth, googleProvider, githubProvider } from "../firebase";
+import { auth, googleProvider, githubProvider, facebookProvider } from "../firebase";
 
 export const createUser = async (userData) => {
   try {
@@ -182,6 +182,72 @@ export const loginWithGithub = async () => {
       throw new Error("Autenticación con GitHub no habilitada en Firebase.");
     } else {
       throw new Error(`Error: ${error.message || "Error al iniciar sesión con GitHub"}`);
+    }
+  }
+};
+
+// Login con Facebook
+export const loginWithFacebook = async () => {
+  try {
+    // Iniciar sesión con popup
+    const result = await signInWithPopup(auth, facebookProvider);
+    const user = result.user;
+
+    // Verificar si el usuario ya existe en Firestore
+    const q = query(userCollection, where("correo", "==", user.email));
+    const querySnapshot = await getDocs(q);
+
+    let userId;
+    let userData;
+
+    if (querySnapshot.empty) {
+      // Si no existe, crear un nuevo usuario en Firestore
+      const newUser = {
+        name: user.displayName || "Usuario Facebook",
+        correo: user.email,
+        password: "", // No almacenamos contraseña para usuarios de Facebook
+        createdAt: new Date(),
+        authProvider: "facebook",
+        photoURL: user.photoURL || "",
+      };
+
+      const docRef = await addDoc(userCollection, newUser);
+      userId = docRef.id;
+      userData = newUser;
+    } else {
+      // Si existe, obtener sus datos
+      const userDoc = querySnapshot.docs[0];
+      userId = userDoc.id;
+      userData = userDoc.data();
+    }
+
+    // Retornar los datos del usuario
+    return {
+      id: userId,
+      name: userData.name,
+      correo: userData.correo,
+      photoURL: userData.photoURL || user.photoURL || "",
+      authProvider: "facebook",
+      createdAt: userData.createdAt,
+    };
+  } catch (error) {
+    console.error("Error completo al iniciar sesión con Facebook: ", error);
+    console.error("Código de error: ", error.code);
+    console.error("Mensaje de error: ", error.message);
+    
+    // Manejar errores específicos
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error("Inicio de sesión cancelado");
+    } else if (error.code === 'auth/popup-blocked') {
+      throw new Error("Popup bloqueado por el navegador. Por favor, permite popups en este sitio.");
+    } else if (error.code === 'auth/unauthorized-domain') {
+      throw new Error("Dominio no autorizado. Configura el dominio en Firebase Console.");
+    } else if (error.code === 'auth/operation-not-allowed') {
+      throw new Error("Autenticación con Facebook no habilitada en Firebase.");
+    } else if (error.code === 'auth/account-exists-with-different-credential') {
+      throw new Error("Ya existe una cuenta con este correo usando otro proveedor.");
+    } else {
+      throw new Error(`Error: ${error.message || "Error al iniciar sesión con Facebook"}`);
     }
   }
 };
