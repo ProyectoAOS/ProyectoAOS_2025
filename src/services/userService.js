@@ -1,10 +1,7 @@
-<<<<<<< Updated upstream
-import { addDoc, getDocs } from "firebase/firestore";
-=======
 import { addDoc, getDocs, query, where } from "firebase/firestore";
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
->>>>>>> Stashed changes
 import { userModel, userCollection } from "../models/users";
+import { auth, googleProvider, githubProvider, facebookProvider } from "../firebase";
 
 export const createUser = async (userData) => {
   try {
@@ -49,9 +46,6 @@ export const createUser = async (userData) => {
   }
 };
 
-<<<<<<< Updated upstream
-//getUser:
-=======
 export const loginUser = async (email, password) => {
   try {
     // Autenticar con Firebase Authentication
@@ -327,4 +321,4 @@ export const getUsers = async () => {
     throw error;
   }
 };
->>>>>>> Stashed changes
+

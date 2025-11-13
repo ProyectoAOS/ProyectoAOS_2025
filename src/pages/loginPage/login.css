@@ -47,6 +47,17 @@
   gap: 1.5rem;
 }
 
+/* Mensaje de error */
+.login-error-message {
+  background-color: #7f1d1d;
+  border: 1px solid #991b1b;
+  color: #fecaca;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
 /* Grupos de input */
 .login-input-group {
   position: relative;
@@ -168,10 +179,21 @@
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.login-submit-button:hover {
+.login-submit-button:hover:not(:disabled) {
   background-color: #1d4ed8;
   transform: scale(1.02);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.login-submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-input:disabled,
+.login-password-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Footer */
@@ -233,6 +255,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 0.5rem;
   padding: 0.625rem 1rem;
   border-radius: 0.5rem;
   border: 1px solid #4b5563;
@@ -241,11 +264,21 @@
   font-weight: 500;
   color: #d1d5db;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.login-social-button:hover {
+.login-social-button:hover:not(:disabled) {
   background-color: #4b5563;
+  transform: translateY(-2px);
+}
+
+.login-social-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-social-icon {
+  flex-shrink: 0;
 }
 
 /* Responsive design */

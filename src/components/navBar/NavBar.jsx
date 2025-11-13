@@ -1,11 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import './NavBar.css';
 
 function NavBar() {
   const navigate = useNavigate();
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [selectedService, setSelectedService] = useState('');
+  const [userName, setUserName] = useState('Usuario');
+  const [userPhoto, setUserPhoto] = useState('');
+
+  useEffect(() => {
+    // Obtener el usuario del localStorage o sessionStorage
+    const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setUserName(user.name || 'Usuario');
+        setUserPhoto(user.photoURL || '');
+      } catch (error) {
+        console.error('Error al parsear usuario:', error);
+      }
+    }
+  }, []);
 
   const services = [
     'Productos',
@@ -20,6 +37,8 @@ function NavBar() {
     // Seleccion de servicio:
     if (service === 'Productos') {
       navigate('/dashboard/products'); // Ruta anidada
+    } else if (service === 'Clientes') {
+      navigate('/dashboard/clients');
     } else if (service === 'Proveedores') {
       navigate('/dashboard/providers');
     }
@@ -27,6 +46,24 @@ function NavBar() {
 
   const toggleServices = () => {
     setIsServicesOpen(!isServicesOpen);
+  };
+
+  const handleLogout = () => {
+    // Limpiar el almacenamiento
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
+    // Redirigir al login
+    navigate('/');
+  };
+
+  // Obtener iniciales del nombre
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   return (
@@ -69,11 +106,26 @@ function NavBar() {
       
       <div className="navbar-user-info">
         <div className="navbar-user-image">
-          U
+          {userPhoto ? (
+            <img 
+              src={userPhoto} 
+              alt={userName}
+              className="navbar-user-photo"
+            />
+          ) : (
+            getInitials(userName)
+          )}
         </div>
         <div>
-          <p className="navbar-user-name">Nombre Usuario</p>
+          <p className="navbar-user-name">{userName}</p>
         </div>
+        <button 
+          className="navbar-logout-button"
+          onClick={handleLogout}
+          title="Cerrar sesión"
+        >
+          <LogOut size={20} />
+        </button>
       </div>
     </nav>
   );
