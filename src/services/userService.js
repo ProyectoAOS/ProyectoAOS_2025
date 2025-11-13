@@ -1,49 +1,99 @@
 import { addDoc, getDocs, query, where } from "firebase/firestore";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { userModel, userCollection } from "../models/users";
 import { auth, googleProvider, githubProvider, facebookProvider } from "../firebase";
 
 export const createUser = async (userData) => {
   try {
-    const data = { ...userModel, ...userData };
+    // Crear usuario en Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(
+      auth, 
+      userData.correo, 
+      userData.password
+    );
+    
+    const user = userCredential.user;
+
+    // Guardar datos adicionales en Firestore (sin la contraseña)
+    const data = {
+      ...userModel,
+      name: userData.name,
+      correo: userData.correo,
+      createdAt: userData.createdAt || new Date(),
+      uid: user.uid, // Guardar el UID de Firebase Auth
+    };
+    
+    // No guardar la contraseña en Firestore ya que Firebase Auth la maneja
+    delete data.password;
+    
     const docRef = await addDoc(userCollection, data);
 
     return docRef.id;
   } catch (error) {
     console.error("Error al crear usuario: ", error);
-    throw error;
+    
+    // Manejar errores específicos de Firebase Auth
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        throw new Error("Este correo ya está registrado");
+      case "auth/invalid-email":
+        throw new Error("Correo electrónico inválido");
+      case "auth/weak-password":
+        throw new Error("La contraseña es muy débil");
+      default:
+        throw error;
+    }
   }
 };
 
 export const loginUser = async (email, password) => {
   try {
-    // Crear una consulta para buscar el usuario por correo
+    // Autenticar con Firebase Authentication
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Buscar datos adicionales del usuario en Firestore
     const q = query(userCollection, where("correo", "==", email));
     const querySnapshot = await getDocs(q);
 
-    if (querySnapshot.empty) {
-      throw new Error("Usuario no encontrado");
-    }
-
-    // Obtener el primer documento que coincida
-    const userDoc = querySnapshot.docs[0];
-    const userData = userDoc.data();
-
-    // Verificar la contraseña
-    if (userData.password !== password) {
-      throw new Error("Contraseña incorrecta");
-    }
-
-    // Retornar los datos del usuario (sin la contraseña)
-    return {
-      id: userDoc.id,
-      name: userData.name,
-      correo: userData.correo,
-      createdAt: userData.createdAt,
+    let userData = {
+      id: user.uid,
+      name: user.displayName || email.split('@')[0],
+      correo: user.email,
+      createdAt: user.metadata.creationTime,
     };
+
+    // Si existe en Firestore, usar esos datos
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const firestoreData = userDoc.data();
+      userData = {
+        id: userDoc.id,
+        name: firestoreData.name,
+        correo: firestoreData.correo,
+        createdAt: firestoreData.createdAt,
+      };
+    }
+
+    return userData;
   } catch (error) {
     console.error("Error al iniciar sesión: ", error);
-    throw error;
+    
+    // Manejar errores específicos de Firebase Auth
+    switch (error.code) {
+      case "auth/user-not-found":
+        throw new Error("Usuario no encontrado");
+      case "auth/wrong-password":
+        throw new Error("Contraseña incorrecta");
+      case "auth/invalid-email":
+        throw new Error("Correo electrónico inválido");
+      case "auth/user-disabled":
+        throw new Error("Usuario deshabilitado");
+      case "auth/too-many-requests":
+        throw new Error("Demasiados intentos. Intenta más tarde");
+      default:
+        throw new Error(error.message || "Error al iniciar sesión");
+    }
   }
 };
 
@@ -271,3 +321,4 @@ export const getUsers = async () => {
     throw error;
   }
 };
+
