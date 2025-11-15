@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser, loginWithGoogle, loginWithGithub, loginWithFacebook } from "../../services/userService";
+import { 
+  loginUser, 
+  loginWithGoogle, 
+  loginWithGithub, 
+  loginWithFacebook
+} from "../../services/userService";
 import "./Login.css";
 
 function LoginComponent() {
@@ -38,6 +43,11 @@ function LoginComponent() {
         sessionStorage.setItem("user", JSON.stringify(user));
       }
 
+      // Mostrar mensaje si las cuentas fueron consolidadas
+      if (user.merged) {
+        console.log("✅ Tu cuenta se ha consolidado con cuentas existentes");
+      }
+
       // Redirigir al dashboard
       navigate("/dashboard");
     } catch (err) {
@@ -46,62 +56,33 @@ function LoginComponent() {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleProviderLogin = async (providerFunction, providerName) => {
     setError("");
     setLoading(true);
 
     try {
-      // Iniciar sesión con Google
-      const user = await loginWithGoogle();
+      // Iniciar sesión con el proveedor
+      const userData = await providerFunction();
       
-      // Guardar datos del usuario (siempre en localStorage para Google)
-      localStorage.setItem("user", JSON.stringify(user));
+      // Guardar datos del usuario (siempre en localStorage para proveedores sociales)
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // Mostrar mensaje si las cuentas fueron consolidadas
+      if (userData.merged) {
+        console.log(`✅ Tu cuenta de ${providerName} se ha consolidado con tu cuenta existente`);
+      }
 
       // Redirigir al dashboard
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Error al iniciar sesión con Google");
+      setError(err.message || `Error al iniciar sesión con ${providerName}`);
       setLoading(false);
     }
   };
 
-  const handleGithubLogin = async () => {
-    setError("");
-    setLoading(true);
-
-    try {
-      // Iniciar sesión con GitHub
-      const user = await loginWithGithub();
-      
-      // Guardar datos del usuario (siempre en localStorage para GitHub)
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Redirigir al dashboard
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "Error al iniciar sesión con GitHub");
-      setLoading(false);
-    }
-  };
-
-  const handleFacebookLogin = async () => {
-    setError("");
-    setLoading(true);
-
-    try {
-      // Iniciar sesión con Facebook
-      const user = await loginWithFacebook();
-      
-      // Guardar datos del usuario (siempre en localStorage para Facebook)
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Redirigir al dashboard
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "Error al iniciar sesión con Facebook");
-      setLoading(false);
-    }
-  };
+  const handleGoogleLogin = () => handleProviderLogin(loginWithGoogle, "Google");
+  const handleGithubLogin = () => handleProviderLogin(loginWithGithub, "GitHub");
+  const handleFacebookLogin = () => handleProviderLogin(loginWithFacebook, "Facebook");
 
   return (
     <div className="login-container">
@@ -129,6 +110,7 @@ function LoginComponent() {
               }
               className="login-input"
               disabled={loading}
+              required
             />
           </div>
 
@@ -143,6 +125,7 @@ function LoginComponent() {
               }
               className="login-input"
               disabled={loading}
+              required
             />
             <button
               type="button"

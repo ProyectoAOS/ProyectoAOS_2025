@@ -1,11 +1,211 @@
-import { addDoc, getDocs, query, where } from "firebase/firestore";
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { addDoc, getDocs, query, where, updateDoc, doc, setDoc, getDoc, collection } from "firebase/firestore";
+import { 
+  signInWithPopup, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  FacebookAuthProvider,
+  fetchSignInMethodsForEmail,
+  linkWithCredential,
+  EmailAuthProvider,
+} from "firebase/auth";
 import { userModel, userCollection } from "../models/users";
-import { auth, googleProvider, githubProvider, facebookProvider } from "../firebase";
+import db, { auth, googleProvider, githubProvider, facebookProvider } from "../firebase";
+import { logAuditEvent } from "./auditService";
+
+// Función para crear o actualizar usuario usando UID como ID del documento
+const createOrUpdateUser = async (user, providerName) => {
+  try {
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    const userData = {
+      name: user.displayName || `Usuario ${providerName}`,
+      correo: user.email,
+      photoURL: user.photoURL || "",
+      uid: user.uid,
+      lastLoginAt: new Date(),
+    };
+
+    if (userDoc.exists()) {
+      // Usuario existe, actualizar solo ciertos campos
+      const existingData = userDoc.data();
+      const providers = existingData.providers || [];
+      const providerLower = providerName.toLowerCase();
+      
+      if (!providers.includes(providerLower)) {
+        providers.push(providerLower);
+      }
+
+      await updateDoc(userDocRef, {
+        providers: providers,
+        photoURL: user.photoURL || existingData.photoURL || "",
+        lastLoginAt: new Date(),
+        name: user.displayName || existingData.name,
+      });
+
+      // Registrar login en auditoría
+      await logAuditEvent({
+        userId: user.uid,
+        userName: existingData.name,
+        userEmail: existingData.correo,
+        action: "login",
+        authProvider: providerLower,
+        success: true,
+        merged: false,
+      });
+
+      return {
+        id: user.uid,
+        name: existingData.name,
+        correo: existingData.correo,
+        photoURL: user.photoURL || existingData.photoURL || "",
+        providers: providers,
+        createdAt: existingData.createdAt,
+      };
+    } else {
+      // Verificar si existe otro usuario con el mismo email (diferente UID)
+      console.log("==========================================");
+      console.log(`🔍 BUSCANDO USUARIO EXISTENTE`);
+      console.log(`Email a buscar: ${user.email}`);
+      console.log("==========================================");
+      
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("correo", "==", user.email));
+      const querySnapshot = await getDocs(q);
+      
+      console.log(`📊 Resultados de búsqueda: ${querySnapshot.size} usuario(s) encontrado(s)`);
+      
+      if (!querySnapshot.empty) {
+        // Existe otro usuario con el mismo email
+        const existingUserDoc = querySnapshot.docs[0];
+        const existingUserData = existingUserDoc.data();
+        const existingUid = existingUserDoc.id;
+        
+        console.log("==========================================");
+        console.log(`✅ USUARIO EXISTENTE ENCONTRADO - CONSOLIDANDO`);
+        console.log("==========================================");
+        console.log(`UID Existente: ${existingUid}`);
+        console.log(`UID Nuevo: ${user.uid}`);
+        console.log(`Proveedores existentes:`, existingUserData.providers);
+        console.log(`Nuevo proveedor: ${providerName}`);
+        console.log("==========================================");
+        
+        const existingUserDocRef = doc(db, "users", existingUid);
+        const providers = existingUserData.providers || [];
+        const providerLower = providerName.toLowerCase();
+        
+        if (!providers.includes(providerLower)) {
+          providers.push(providerLower);
+          console.log(`➕ Agregando proveedor ${providerLower} a la lista`);
+        }
+        
+        console.log("🔄 Actualizando documento principal en Firestore...");
+        await updateDoc(existingUserDocRef, {
+          providers: providers,
+          [`alternativeUIDs.${providerLower}`]: user.uid,
+          photoURL: user.photoURL || existingUserData.photoURL || "",
+          lastLoginAt: new Date(),
+        });
+        
+        console.log("🔄 Creando documento secundario...");
+        await setDoc(userDocRef, {
+          ...existingUserData,
+          uid: user.uid,
+          primaryUid: existingUid,
+          providers: providers,
+          photoURL: user.photoURL || existingUserData.photoURL || "",
+          lastLoginAt: new Date(),
+        });
+        
+        // Registrar consolidación en auditoría
+        await logAuditEvent({
+          userId: existingUid,
+          userName: existingUserData.name,
+          userEmail: existingUserData.correo,
+          action: "account_merge",
+          authProvider: providerLower,
+          success: true,
+          merged: true,
+          primaryUid: existingUid,
+          alternativeUid: user.uid,
+        });
+        
+        console.log("==========================================");
+        console.log("🎉 CONSOLIDACIÓN COMPLETADA");
+        console.log("==========================================");
+        
+        return {
+          id: existingUid,
+          name: existingUserData.name,
+          correo: existingUserData.correo,
+          photoURL: user.photoURL || existingUserData.photoURL || "",
+          providers: providers,
+          createdAt: existingUserData.createdAt,
+          merged: true,
+        };
+      }
+      
+      console.log(`🆕 No se encontró usuario existente, creando nuevo usuario`);
+      
+      const newUserData = {
+        ...userData,
+        providers: [providerName.toLowerCase()],
+        createdAt: new Date(),
+      };
+
+      await setDoc(userDocRef, newUserData);
+
+      // Registrar registro en auditoría
+      await logAuditEvent({
+        userId: user.uid,
+        userName: newUserData.name,
+        userEmail: newUserData.correo,
+        action: "register",
+        authProvider: providerName.toLowerCase(),
+        success: true,
+        merged: false,
+      });
+
+      return {
+        id: user.uid,
+        ...newUserData,
+      };
+    }
+  } catch (error) {
+    console.error("Error en createOrUpdateUser:", error);
+    
+    // Registrar error en auditoría
+    await logAuditEvent({
+      userId: user?.uid || "",
+      userName: user?.displayName || "",
+      userEmail: user?.email || "",
+      action: "login",
+      authProvider: providerName.toLowerCase(),
+      success: false,
+      errorMessage: error.message,
+    });
+    
+    throw error;
+  }
+};
+
+// Función para registrar el login en una subcolección
+const addLoginRecord = async (uid) => {
+  try {
+    const loginsCollection = collection(db, "users", uid, "logins");
+    await addDoc(loginsCollection, {
+      loginAt: new Date(),
+      timestamp: new Date().getTime(),
+    });
+  } catch (error) {
+    console.error("Error al registrar login:", error);
+  }
+};
 
 export const createUser = async (userData) => {
   try {
-    // Crear usuario en Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(
       auth, 
       userData.correo, 
@@ -13,33 +213,53 @@ export const createUser = async (userData) => {
     );
     
     const user = userCredential.user;
+    const userDocRef = doc(db, "users", user.uid);
 
-    // Guardar datos adicionales en Firestore (sin la contraseña)
     const data = {
-      ...userModel,
       name: userData.name,
       correo: userData.correo,
-      createdAt: userData.createdAt || new Date(),
-      uid: user.uid, // Guardar el UID de Firebase Auth
+      createdAt: new Date(),
+      uid: user.uid,
+      providers: ["password"],
+      photoURL: "",
+      lastLoginAt: new Date(),
     };
     
-    // No guardar la contraseña en Firestore ya que Firebase Auth la maneja
-    delete data.password;
-    
-    const docRef = await addDoc(userCollection, data);
+    await setDoc(userDocRef, data);
+    await addLoginRecord(user.uid);
 
-    return docRef.id;
+    // Registrar en auditoría
+    await logAuditEvent({
+      userId: user.uid,
+      userName: userData.name,
+      userEmail: userData.correo,
+      action: "register",
+      authProvider: "password",
+      success: true,
+    });
+
+    return user.uid;
   } catch (error) {
     console.error("Error al crear usuario: ", error);
     
-    // Manejar errores específicos de Firebase Auth
+    // Registrar error en auditoría
+    await logAuditEvent({
+      userId: "",
+      userName: userData.name || "",
+      userEmail: userData.correo || "",
+      action: "register",
+      authProvider: "password",
+      success: false,
+      errorMessage: error.message,
+    });
+    
     switch (error.code) {
       case "auth/email-already-in-use":
         throw new Error("Este correo ya está registrado");
       case "auth/invalid-email":
         throw new Error("Correo electrónico inválido");
       case "auth/weak-password":
-        throw new Error("La contraseña es muy débil");
+        throw new Error("La contraseña es muy débil (mínimo 6 caracteres)");
       default:
         throw error;
     }
@@ -48,38 +268,56 @@ export const createUser = async (userData) => {
 
 export const loginUser = async (email, password) => {
   try {
-    // Autenticar con Firebase Authentication
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Buscar datos adicionales del usuario en Firestore
-    const q = query(userCollection, where("correo", "==", email));
-    const querySnapshot = await getDocs(q);
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
 
-    let userData = {
-      id: user.uid,
-      name: user.displayName || email.split('@')[0],
-      correo: user.email,
-      createdAt: user.metadata.creationTime,
-    };
-
-    // Si existe en Firestore, usar esos datos
-    if (!querySnapshot.empty) {
-      const userDoc = querySnapshot.docs[0];
-      const firestoreData = userDoc.data();
-      userData = {
-        id: userDoc.id,
-        name: firestoreData.name,
-        correo: firestoreData.correo,
-        createdAt: firestoreData.createdAt,
-      };
+    if (!userDoc.exists()) {
+      throw new Error("No se encontraron datos del usuario");
     }
 
-    return userData;
+    const userData = userDoc.data();
+
+    await updateDoc(userDocRef, {
+      lastLoginAt: new Date(),
+    });
+
+    await addLoginRecord(user.uid);
+
+    // Registrar en auditoría
+    await logAuditEvent({
+      userId: user.uid,
+      userName: userData.name,
+      userEmail: userData.correo,
+      action: "login",
+      authProvider: "password",
+      success: true,
+    });
+
+    return {
+      id: user.uid,
+      name: userData.name,
+      correo: userData.correo,
+      providers: userData.providers || ["password"],
+      photoURL: userData.photoURL || "",
+      createdAt: userData.createdAt,
+    };
   } catch (error) {
     console.error("Error al iniciar sesión: ", error);
     
-    // Manejar errores específicos de Firebase Auth
+    // Registrar error en auditoría
+    await logAuditEvent({
+      userId: "",
+      userName: "",
+      userEmail: email || "",
+      action: "login",
+      authProvider: "password",
+      success: false,
+      errorMessage: error.message,
+    });
+    
     switch (error.code) {
       case "auth/user-not-found":
         throw new Error("Usuario no encontrado");
@@ -91,213 +329,133 @@ export const loginUser = async (email, password) => {
         throw new Error("Usuario deshabilitado");
       case "auth/too-many-requests":
         throw new Error("Demasiados intentos. Intenta más tarde");
+      case "auth/invalid-credential":
+        throw new Error("Credenciales inválidas");
       default:
         throw new Error(error.message || "Error al iniciar sesión");
     }
   }
 };
 
-
-// Login con Google
 export const loginWithGoogle = async () => {
   try {
-    // Configurar el provider para forzar selección de cuenta
     googleProvider.setCustomParameters({
       prompt: 'select_account'
     });
 
-    // Iniciar sesión con popup
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
-    // Verificar si el usuario ya existe en Firestore
-    const q = query(userCollection, where("correo", "==", user.email));
-    const querySnapshot = await getDocs(q);
+    const userData = await createOrUpdateUser(user, "Google");
+    await addLoginRecord(user.uid);
 
-    let userId;
-    let userData;
-
-    if (querySnapshot.empty) {
-      // Si no existe, crear un nuevo usuario en Firestore
-      const newUser = {
-        name: user.displayName || "Usuario Google",
-        correo: user.email,
-        password: "", // No almacenamos contraseña para usuarios de Google
-        createdAt: new Date(),
-        authProvider: "google",
-        photoURL: user.photoURL || "",
-      };
-
-      const docRef = await addDoc(userCollection, newUser);
-      userId = docRef.id;
-      userData = newUser;
-    } else {
-      // Si existe, obtener sus datos
-      const userDoc = querySnapshot.docs[0];
-      userId = userDoc.id;
-      userData = userDoc.data();
+    if (userData.merged) {
+      console.log("✅ Cuenta consolidada exitosamente con usuario existente");
     }
 
-    // Retornar los datos del usuario
-    return {
-      id: userId,
-      name: userData.name,
-      correo: userData.correo,
-      photoURL: userData.photoURL || user.photoURL || "",
-      authProvider: "google",
-      createdAt: userData.createdAt,
-    };
-  } catch (error) {
-    console.error("Error completo al iniciar sesión con Google: ", error);
-    console.error("Código de error: ", error.code);
-    console.error("Mensaje de error: ", error.message);
+    return userData;
     
-    // Manejar errores específicos
+  } catch (error) {
+    console.error("Error al iniciar sesión con Google:", error);
+    
+    // Registrar error en auditoría
+    await logAuditEvent({
+      userId: "",
+      userName: "",
+      userEmail: "",
+      action: "login",
+      authProvider: "google",
+      success: false,
+      errorMessage: error.message,
+    });
+    
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error("Inicio de sesión cancelado");
     } else if (error.code === 'auth/popup-blocked') {
-      throw new Error("Popup bloqueado por el navegador. Por favor, permite popups en este sitio.");
-    } else if (error.code === 'auth/unauthorized-domain') {
-      throw new Error("Dominio no autorizado. Configura el dominio en Firebase Console.");
-    } else if (error.code === 'auth/operation-not-allowed') {
-      throw new Error("Autenticación con Google no habilitada en Firebase.");
+      throw new Error("Popup bloqueado. Permite ventanas emergentes para este sitio.");
     } else {
-      throw new Error(`Error: ${error.message || "Error al iniciar sesión con Google"}`);
+      throw new Error(error.message || "Error al iniciar sesión con Google");
     }
   }
 };
 
-// Login con GitHub
 export const loginWithGithub = async () => {
   try {
-    // Configurar el provider para forzar selección de cuenta
     githubProvider.setCustomParameters({
-      prompt: 'select_account'
+      prompt: 'select_account',
+      allow_signup: 'true'
     });
 
-    // Iniciar sesión con popup
     const result = await signInWithPopup(auth, githubProvider);
     const user = result.user;
 
-    // Verificar si el usuario ya existe en Firestore
-    const q = query(userCollection, where("correo", "==", user.email));
-    const querySnapshot = await getDocs(q);
-
-    let userId;
-    let userData;
-
-    if (querySnapshot.empty) {
-      // Si no existe, crear un nuevo usuario en Firestore
-      const newUser = {
-        name: user.displayName || "Usuario GitHub",
-        correo: user.email,
-        password: "", // No almacenamos contraseña para usuarios de GitHub
-        createdAt: new Date(),
-        authProvider: "github",
-        photoURL: user.photoURL || "",
-      };
-
-      const docRef = await addDoc(userCollection, newUser);
-      userId = docRef.id;
-      userData = newUser;
-    } else {
-      // Si existe, obtener sus datos
-      const userDoc = querySnapshot.docs[0];
-      userId = userDoc.id;
-      userData = userDoc.data();
+    if (!user.email) {
+      throw new Error("GitHub no proporcionó un email. Asegúrate de tener un email público en tu perfil de GitHub.");
     }
 
-    // Retornar los datos del usuario
-    return {
-      id: userId,
-      name: userData.name,
-      correo: userData.correo,
-      photoURL: userData.photoURL || user.photoURL || "",
-      authProvider: "github",
-      createdAt: userData.createdAt,
-    };
-  } catch (error) {
-    console.error("Error completo al iniciar sesión con GitHub: ", error);
-    console.error("Código de error: ", error.code);
-    console.error("Mensaje de error: ", error.message);
+    const userData = await createOrUpdateUser(user, "GitHub");
+    await addLoginRecord(user.uid);
+
+    if (userData.merged) {
+      console.log("✅ Cuenta consolidada exitosamente con usuario existente");
+    }
+
+    return userData;
     
-    // Manejar errores específicos
+  } catch (error) {
+    console.error("Error al iniciar sesión con GitHub:", error);
+    
+    // Registrar error en auditoría
+    await logAuditEvent({
+      userId: "",
+      userName: "",
+      userEmail: "",
+      action: "login",
+      authProvider: "github",
+      success: false,
+      errorMessage: error.message,
+    });
+    
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error("Inicio de sesión cancelado");
-    } else if (error.code === 'auth/popup-blocked') {
-      throw new Error("Popup bloqueado por el navegador. Por favor, permite popups en este sitio.");
-    } else if (error.code === 'auth/unauthorized-domain') {
-      throw new Error("Dominio no autorizado. Configura el dominio en Firebase Console.");
-    } else if (error.code === 'auth/operation-not-allowed') {
-      throw new Error("Autenticación con GitHub no habilitada en Firebase.");
     } else {
-      throw new Error(`Error: ${error.message || "Error al iniciar sesión con GitHub"}`);
+      throw new Error(error.message || "Error al iniciar sesión con GitHub");
     }
   }
 };
 
-// Login con Facebook
 export const loginWithFacebook = async () => {
   try {
-    // Iniciar sesión con popup
     const result = await signInWithPopup(auth, facebookProvider);
     const user = result.user;
 
-    // Verificar si el usuario ya existe en Firestore
-    const q = query(userCollection, where("correo", "==", user.email));
-    const querySnapshot = await getDocs(q);
+    const userData = await createOrUpdateUser(user, "Facebook");
+    await addLoginRecord(user.uid);
 
-    let userId;
-    let userData;
-
-    if (querySnapshot.empty) {
-      // Si no existe, crear un nuevo usuario en Firestore
-      const newUser = {
-        name: user.displayName || "Usuario Facebook",
-        correo: user.email,
-        password: "", // No almacenamos contraseña para usuarios de Facebook
-        createdAt: new Date(),
-        authProvider: "facebook",
-        photoURL: user.photoURL || "",
-      };
-
-      const docRef = await addDoc(userCollection, newUser);
-      userId = docRef.id;
-      userData = newUser;
-    } else {
-      // Si existe, obtener sus datos
-      const userDoc = querySnapshot.docs[0];
-      userId = userDoc.id;
-      userData = userDoc.data();
+    if (userData.merged) {
+      console.log("✅ Cuenta consolidada exitosamente con usuario existente");
     }
 
-    // Retornar los datos del usuario
-    return {
-      id: userId,
-      name: userData.name,
-      correo: userData.correo,
-      photoURL: userData.photoURL || user.photoURL || "",
-      authProvider: "facebook",
-      createdAt: userData.createdAt,
-    };
-  } catch (error) {
-    console.error("Error completo al iniciar sesión con Facebook: ", error);
-    console.error("Código de error: ", error.code);
-    console.error("Mensaje de error: ", error.message);
+    return userData;
     
-    // Manejar errores específicos
+  } catch (error) {
+    console.error("Error al iniciar sesión con Facebook:", error);
+    
+    // Registrar error en auditoría
+    await logAuditEvent({
+      userId: "",
+      userName: "",
+      userEmail: "",
+      action: "login",
+      authProvider: "facebook",
+      success: false,
+      errorMessage: error.message,
+    });
+    
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error("Inicio de sesión cancelado");
-    } else if (error.code === 'auth/popup-blocked') {
-      throw new Error("Popup bloqueado por el navegador. Por favor, permite popups en este sitio.");
-    } else if (error.code === 'auth/unauthorized-domain') {
-      throw new Error("Dominio no autorizado. Configura el dominio en Firebase Console.");
-    } else if (error.code === 'auth/operation-not-allowed') {
-      throw new Error("Autenticación con Facebook no habilitada en Firebase.");
-    } else if (error.code === 'auth/account-exists-with-different-credential') {
-      throw new Error("Ya existe una cuenta con este correo usando otro proveedor.");
     } else {
-      throw new Error(`Error: ${error.message || "Error al iniciar sesión con Facebook"}`);
+      throw new Error(error.message || "Error al iniciar sesión con Facebook");
     }
   }
 };
@@ -307,14 +465,22 @@ export const getUsers = async () => {
   try {
     const querySnapshot = await getDocs(userCollection);
     const users = [];
+    const processedUids = new Set(); // Para evitar duplicados
     
     querySnapshot.forEach((doc) => {
-      users.push({
-        id: doc.id,
-        ...doc.data(),
-      });
+      const userData = doc.data();
+      
+      // Solo agregar si no tiene primaryUid (evitar duplicados de cuentas consolidadas)
+      if (!userData.primaryUid && !processedUids.has(doc.id)) {
+        users.push({
+          id: doc.id,
+          ...userData,
+        });
+        processedUids.add(doc.id);
+      }
     });
 
+    console.log(`✅ Se obtuvieron ${users.length} usuarios únicos`);
     return users;
   } catch (error) {
     console.error("Error al obtener usuarios: ", error);
@@ -322,3 +488,22 @@ export const getUsers = async () => {
   }
 };
 
+// Obtener usuario por UID
+export const getUserByUid = async (uid) => {
+  try {
+    const userDocRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      return {
+        id: userDoc.id,
+        ...userDoc.data(),
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error al obtener usuario por UID:", error);
+    throw error;
+  }
+};
