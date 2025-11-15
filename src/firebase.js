@@ -21,9 +21,20 @@ const db = getFirestore(app);
 
 // Iniciar Auth
 export const auth = getAuth(app);
+
+// Configurar Google Provider
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+
+// Configurar GitHub Provider
 export const githubProvider = new GithubAuthProvider();
+githubProvider.addScope('user:email'); // Solicitar acceso a emails
+githubProvider.addScope('read:user');  // Solicitar acceso a perfil
+
+// Configurar Facebook Provider
 export const facebookProvider = new FacebookAuthProvider();
+facebookProvider.addScope('email');
 
 export default db;
 const analytics = getAnalytics(app);

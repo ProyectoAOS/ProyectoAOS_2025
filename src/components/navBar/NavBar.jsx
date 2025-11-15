@@ -28,6 +28,7 @@ function NavBar() {
     'Productos',
     'Clientes',
     'Proveedores',
+    'Usuarios'
   ];
 
   const handleServiceSelect = (service) => {
@@ -41,6 +42,8 @@ function NavBar() {
       navigate('/dashboard/clients');
     } else if (service === 'Proveedores') {
       navigate('/dashboard/providers');
+    } else if (service === 'Usuarios'){
+      navigate('/dashboard/users')
     }
   };
 

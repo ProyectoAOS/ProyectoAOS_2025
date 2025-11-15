@@ -11,6 +11,7 @@ import ProductsComponent from "./pages/ProductsPage/products.jsx";
 import ProviderPage from "./pages/ProviderPage/Provider.jsx";
 import ClientPage from "./pages/ClientPage/Client.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AuditPage from "./pages/auditPage/AuditPage.jsx"
 
 function App() {
   return (
@@ -50,7 +51,7 @@ function App() {
             path="providers"
             element={<ProviderPage></ProviderPage>}
           ></Route>
-
+          <Route path="users" element={<AuditPage></AuditPage>}></Route>
         </Route>
       </Routes>
     </BrowserRouter>

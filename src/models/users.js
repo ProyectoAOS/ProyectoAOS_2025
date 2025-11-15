@@ -8,5 +8,6 @@ export const userModel = {
     name: "",
     correo: "",
     password: "",
+    providers: [],
     createdAt: new Date(),
 }
