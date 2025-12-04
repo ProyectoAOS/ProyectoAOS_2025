@@ -3,6 +3,8 @@ import './AuditPage.css';
 import { getAuditLogs, getAuditStats } from '../../services/auditService';
 import { getUsers } from '../../services/userService';
 import Swal from 'sweetalert2';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function AuditPage() {
   const [logs, setLogs] = useState([]);
@@ -209,6 +211,145 @@ function AuditPage() {
     link.click();
   };
 
+  const exportToPDF = () => {
+    if (filteredLogs.length === 0) {
+      Swal.fire({
+        title: 'Sin datos',
+        text: 'No hay registros para exportar.',
+        icon: 'warning',
+        confirmButtonColor: '#3B82F6',
+        background: '#1F2937',
+        color: '#FFFFFF',
+      });
+      return;
+    }
+
+    try {
+      const doc = new jsPDF('l', 'mm', 'a4'); // Formato horizontal para más espacio
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      // Título
+      doc.setFontSize(18);
+      doc.setTextColor(40, 40, 40);
+      doc.text('Auditoria de Usuarios', pageWidth / 2, 15, { align: 'center' });
+
+      // Subtítulo
+      doc.setFontSize(11);
+      doc.setTextColor(100, 100, 100);
+      const fechaActual = new Date().toLocaleDateString('es-ES');
+      const horaActual = new Date().toLocaleTimeString('es-ES');
+      doc.text(`Reporte generado el ${fechaActual} a las ${horaActual}`, pageWidth / 2, 22, { align: 'center' });
+
+      // Información de filtros aplicados
+      const activeFilters = [];
+      if (filters.user !== 'all') activeFilters.push(`Usuario: ${filters.user}`);
+      if (filters.action !== 'all') activeFilters.push(`Accion: ${filters.action}`);
+      if (filters.authProvider !== 'all') activeFilters.push(`Proveedor: ${filters.authProvider}`);
+      if (filters.success !== 'all') activeFilters.push(`Estado: ${filters.success === 'true' ? 'Exitosos' : 'Fallidos'}`);
+      if (filters.dateRange !== 'all') activeFilters.push(`Periodo: ${filters.dateRange}`);
+      
+      let startY = 28;
+      if (activeFilters.length > 0) {
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        doc.text(`Filtros aplicados: ${activeFilters.join(', ')}`, 14, 28);
+        startY = 32;
+      }
+
+      // Preparar datos para la tabla
+      const tableData = filteredLogs.map(log => {
+        const actionText = getActionBadge(log.action).text;
+        const providerText = getProviderBadge(log.authProvider).text;
+        return [
+          formatDate(log.timestamp),
+          log.userName || 'N/A',
+          log.userEmail || 'N/A',
+          actionText,
+          providerText,
+          log.success ? 'Exito' : 'Fallo',
+          log.merged ? 'Si' : 'No'
+        ];
+      });
+
+      // Generar tabla
+      autoTable(doc, {
+        startY: startY,
+        head: [['Fecha', 'Usuario', 'Correo', 'Accion', 'Proveedor', 'Estado', 'Consolidado']],
+        body: tableData,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          overflow: 'linebreak',
+          halign: 'left'
+        },
+        headStyles: {
+          fillColor: [59, 130, 246],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        columnStyles: {
+          0: { cellWidth: 35 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 50 },
+          3: { cellWidth: 35 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 25 }
+        },
+        alternateRowStyles: {
+          fillColor: [245, 247, 250]
+        },
+        margin: { left: 14, right: 14 },
+        didDrawPage: function (data) {
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
+          doc.text(`Pagina ${pageNumber}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        }
+      });
+
+      // Agregar resumen al final
+      const finalY = doc.lastAutoTable && doc.lastAutoTable.finalY ? doc.lastAutoTable.finalY : startY + 10;
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`Total de registros: ${filteredLogs.length}`, 14, finalY + 10);
+      
+      // Estadísticas adicionales
+      const successCount = filteredLogs.filter(log => log.success).length;
+      const failCount = filteredLogs.length - successCount;
+      const mergedCount = filteredLogs.filter(log => log.merged).length;
+      
+      doc.text(`Exitosos: ${successCount}  |  Fallidos: ${failCount}  |  Consolidados: ${mergedCount}`, 14, finalY + 16);
+
+      // Guardar PDF
+      const fileName = `auditoria_usuarios_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      Swal.fire({
+        title: 'Exito',
+        text: 'PDF exportado correctamente',
+        icon: 'success',
+        confirmButtonColor: '#3B82F6',
+        background: '#1F2937',
+        color: '#FFFFFF',
+        timer: 2000
+      });
+
+    } catch (error) {
+      console.error('Error al exportar PDF:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Hubo un error al generar el PDF. Por favor, intenta de nuevo.',
+        icon: 'error',
+        confirmButtonColor: '#EF4444',
+        background: '#1F2937',
+        color: '#FFFFFF',
+      });
+    }
+  };
+
   // Obtener usuarios únicos de los logs
   const getUniqueUsersFromLogs = () => {
     const uniqueUsers = new Map();
@@ -227,9 +368,14 @@ function AuditPage() {
           <h2 className="audit-title">Auditoría de Seguridad</h2>
           <p className="audit-subtitle">Monitoreo de actividad de usuarios</p>
         </div>
-        <button className="audit-export-button" onClick={exportToCSV}>
-          📊 Exportar CSV
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="audit-export-button" onClick={exportToCSV}>
+            📊 Exportar CSV
+          </button>
+          <button className="audit-export-button" onClick={exportToPDF}>
+            📄 Exportar PDF
+          </button>
+        </div>
       </div>
 
       {/* Filtros */}
